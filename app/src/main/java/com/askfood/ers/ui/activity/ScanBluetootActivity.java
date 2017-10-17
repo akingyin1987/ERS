@@ -2,6 +2,7 @@ package com.askfood.ers.ui.activity;
 
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -26,6 +27,7 @@ import com.askfood.ers.ERSApp;
 import com.askfood.ers.R;
 import com.askfood.ers.base.AbsBaseActivity;
 
+import com.askfood.ers.base.rx.RxUtil;
 import com.askfood.ers.bluetooth.BluetoothHelp;
 import com.askfood.ers.bluetooth.PrintUtils;
 import com.askfood.ers.injection.component.ActivityComponent;
@@ -36,6 +38,7 @@ import com.askfood.ers.presenter.impl.ScanBluetoothPresenterImpl;
 import com.askfood.ers.ui.adapter.BluetoothSeachAdapter;
 import com.askfood.ers.utils.PreferencesUtil;
 import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.tencent.bugly.crashreport.CrashReport;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -45,6 +48,9 @@ import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.Observable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.observers.SafeObserver;
 import top.wuhaojie.bthelper.BtHelperClient;
 import top.wuhaojie.bthelper.MessageItem;
 import top.wuhaojie.bthelper.OnSearchDeviceListener;
@@ -179,11 +185,43 @@ public class ScanBluetootActivity extends AbsBaseActivity<ScanBluetoothPresenter
             return;
         }
 
+        RxUtil.createData(btHelperClient.connect(addr)).compose(RxUtil.<BluetoothSocket>IO_Main())
+                .subscribe(new Consumer<BluetoothSocket>() {
+                    @Override
+                    public void accept(BluetoothSocket bluetoothSocket) throws Exception {
+                        if(null != bluetoothSocket){
+                             print(bluetoothSocket);
+                        }else{
+                            showError("连接失败");
+                        }
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                      throwable.printStackTrace();
+                        showError("出错了"+throwable.getMessage());
+                    }
+                });
 
-        btHelperClient.sendMessage(addr,new MessageItem(PrintUtils.RESET),this);
-        btHelperClient.sendMessage(addr,new MessageItem(PrintUtils.LINE_SPACING_DEFAULT),this);
-        btHelperClient.sendMessage(addr,new MessageItem(PrintUtils.ALIGN_CENTER),this);
-        btHelperClient.sendMessage(addr,new MessageItem(PrintUtils.printText("重庆问天食品有限公司\\n\\n")),this);
+    }
+
+
+    public   void   print(BluetoothSocket  socket){
+        RxUtil.createData(socket).subscribe(new Consumer<BluetoothSocket>() {
+            @Override
+            public void accept(BluetoothSocket socket) throws Exception {
+               PrintUtils.setOutputStream(socket.getOutputStream());
+               PrintUtils.selectCommand(PrintUtils.RESET);
+               PrintUtils.selectCommand(PrintUtils.LINE_SPACING_DEFAULT);
+               PrintUtils.selectCommand(PrintUtils.ALIGN_CENTER);
+               PrintUtils.printText("重庆问天食品有限公司\n\n");
+            }
+        }, new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) throws Exception {
+                showError("打印出错了"+throwable.getMessage());
+            }
+        });
     }
 
     @Override
@@ -200,12 +238,28 @@ public class ScanBluetootActivity extends AbsBaseActivity<ScanBluetoothPresenter
 
     @Override
     public void onError(Exception e) {
-        showError("打印失败");
+        e.printStackTrace();
+        System.out.println("--------------------");
+        RxUtil.createData(e).compose(RxUtil.<Exception>IO_Main()).subscribe(new Consumer<Exception>() {
+            @Override
+            public void accept(Exception e) throws Exception {
+                CrashReport.postCatchedException(e);
+                showError("出错了"+e.getMessage());
+            }
+        });
     }
 
     @Override
     public void onConnectionLost(Exception e) {
-        showError("与蓝牙设备连接丢失，请重新尝试");
+        e.printStackTrace();
+        RxUtil.createData(e).compose(RxUtil.<Exception>IO_Main()).subscribe(new Consumer<Exception>() {
+            @Override
+            public void accept(Exception e) throws Exception {
+                CrashReport.postCatchedException(e);
+                showError("与蓝牙设备连接丢失，请重新尝试"+e.getMessage());
+            }
+        });
+
     }
 
     @Override

@@ -14,11 +14,14 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.tencent.bugly.crashreport.CrashReport;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -51,7 +54,8 @@ public class BtHelperClient {
     private enum STATUS {
         DISCOVERING,
         CONNECTED,
-        FREE
+        FREE,
+        CONNECTING
     }
 
     private volatile STATUS mCurrStatus = STATUS.FREE;
@@ -172,6 +176,58 @@ public class BtHelperClient {
         }
     }
 
+    public   BluetoothSocket   connect(String  mac){
+        if(null !=mSocket && mSocket.isConnected()){
+            return  mSocket;
+        }
+        BluetoothDevice remoteDevice = mBluetoothAdapter.getRemoteDevice(mac);
+        CrashReport.postCatchedException(new Throwable("null ==remoteDevice"+(null == remoteDevice)));
+        mBluetoothAdapter.cancelDiscovery();
+        mCurrStatus = STATUS.CONNECTING;
+        try {
+
+            mSocket =  (BluetoothSocket) remoteDevice.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(remoteDevice,1);
+            mSocket.connect();
+            mInputStream = mSocket.getInputStream();
+            mOutputStream = mSocket.getOutputStream();
+            mCurrStatus = STATUS.CONNECTED;
+            return  mSocket;
+        } catch (Exception e) {
+            CrashReport.postCatchedException(e);
+            try {
+                mSocket =  (BluetoothSocket) remoteDevice.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(remoteDevice,1);
+                mSocket.connect();
+                mInputStream = mSocket.getInputStream();
+                mOutputStream = mSocket.getOutputStream();
+                mCurrStatus = STATUS.CONNECTED;
+                return  mSocket;
+            } catch (Exception e1) {
+                CrashReport.postCatchedException(e1);
+                e1.printStackTrace();
+
+                try {
+                    mInputStream.close();
+                    mOutputStream.close();
+                } catch (IOException closeException) {
+                    closeException.printStackTrace();
+                }
+                mCurrStatus = STATUS.FREE;
+                return  null;
+            }
+
+
+        }
+    }
+
+
+    public    void   closeExecutorService(){
+        try {
+            mExecutorService.shutdownNow();
+            mExecutorService = Executors.newCachedThreadPool();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 
     private class Receiver extends BroadcastReceiver {
         @Override
@@ -226,7 +282,7 @@ public class BtHelperClient {
      */
     public void sendMessage(String mac, MessageItem item, boolean needResponse, OnSendMessageListener listener) {
         // if not connected
-        if (mCurrStatus != STATUS.CONNECTED)
+        if (mCurrStatus != STATUS.CONNECTED )
             connectDevice(mac, listener);
         mMessageQueue.add(item);
         WriteRunnable writeRunnable = new WriteRunnable(listener, needResponse);
@@ -543,13 +599,17 @@ public class BtHelperClient {
             throw new IllegalArgumentException("mac address is null or empty!");
         if (!BluetoothAdapter.checkBluetoothAddress(mac))
             throw new IllegalArgumentException("mac address is not correct! make sure it's upper case!");
-
+        if(mCurrStatus == STATUS.CONNECTING){
+            return;
+        }
         ConnectDeviceRunnable connectDeviceRunnable = new ConnectDeviceRunnable(mac, listener);
         checkNotNull(mExecutorService);
 
         mExecutorService.submit(connectDeviceRunnable);
 
     }
+
+
 
 
     private class ConnectDeviceRunnable implements Runnable {
@@ -565,28 +625,45 @@ public class BtHelperClient {
         public void run() {
             // always return a remote device
             BluetoothDevice remoteDevice = mBluetoothAdapter.getRemoteDevice(mac);
+            CrashReport.postCatchedException(new Throwable("null ==remoteDevice"+(null == remoteDevice)));
             mBluetoothAdapter.cancelDiscovery();
-            mCurrStatus = STATUS.FREE;
+            mCurrStatus = STATUS.CONNECTING;
             try {
-                Log.d(TAG, "prepare to connect: " + remoteDevice.getAddress() + " " + remoteDevice.getName());
-//                BluetoothSocket socket =  remoteDevice.createRfcommSocketToServiceRecord(UUID.fromString(STR_UUID));
-//                BluetoothSocket socket =  (BluetoothSocket) remoteDevice.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(remoteDevice,1);
-                mSocket = remoteDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString(Constants.STR_UUID));
-//                if(!socket.isConnected())
+
+                mSocket =  (BluetoothSocket) remoteDevice.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(remoteDevice,1);
                 mSocket.connect();
                 mInputStream = mSocket.getInputStream();
                 mOutputStream = mSocket.getOutputStream();
                 mCurrStatus = STATUS.CONNECTED;
+
+//                mSocket = remoteDevice.createInsecureRfcommSocketToServiceRecord(UUID.fromString(Constants.STR_UUID));
+//                mSocket.connect();
+//                mInputStream = mSocket.getInputStream();
+//                mOutputStream = mSocket.getOutputStream();
+//                mCurrStatus = STATUS.CONNECTED;
             } catch (Exception e) {
-                if (listener != null)
-                    listener.onError(e);
+                CrashReport.postCatchedException(e);
                 try {
-                    mInputStream.close();
-                    mOutputStream.close();
-                } catch (IOException closeException) {
-                    closeException.printStackTrace();
+                    mSocket =  (BluetoothSocket) remoteDevice.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(remoteDevice,1);
+                    mSocket.connect();
+                    mInputStream = mSocket.getInputStream();
+                    mOutputStream = mSocket.getOutputStream();
+                    mCurrStatus = STATUS.CONNECTED;
+                } catch (Exception e1) {
+                    CrashReport.postCatchedException(e1);
+                    e1.printStackTrace();
+                    if (listener != null)
+                        listener.onError(e);
+                    try {
+                        mInputStream.close();
+                        mOutputStream.close();
+                    } catch (IOException closeException) {
+                        closeException.printStackTrace();
+                    }
+                    mCurrStatus = STATUS.FREE;
                 }
-                mCurrStatus = STATUS.FREE;
+
+
             }
         }
     }
@@ -601,6 +678,7 @@ public class BtHelperClient {
      * with the stream.
      */
     public void close() {
+
         if (mBluetoothAdapter != null)
             mBluetoothAdapter.cancelDiscovery();
 
@@ -628,6 +706,7 @@ public class BtHelperClient {
 
         sBtHelperClient = null;
         mCurrStatus = STATUS.FREE;
+        closeExecutorService();
     }
 
 }

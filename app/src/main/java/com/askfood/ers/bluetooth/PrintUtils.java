@@ -52,9 +52,9 @@ public class PrintUtils {
     public static byte[] printText(String text) {
         try {
             byte[] data = text.getBytes("gbk");
-            return  data;
-          //  outputStream.write(data, 0, data.length);
-           // outputStream.flush();
+
+            outputStream.write(data, 0, data.length);
+            outputStream.flush();
         } catch (IOException e) {
             //Toast.makeText(this.context, "发送失败！", Toast.LENGTH_SHORT).show();
             e.printStackTrace();

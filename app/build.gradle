@@ -9,8 +9,8 @@ android {
         applicationId "com.askfood.ers"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.compileSdk
-        versionCode 4
-        versionName "ERS V0.0.4 dev"
+        versionCode 5
+        versionName "ERS V0.0.5 dev"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         ndk {
