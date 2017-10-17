@@ -1,0 +1,43 @@
+/*
+ * Copyright (c) 2017. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+ * Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
+ * Etiam sed turpis ac ipsum condimentum fringilla. Maecenas magna.
+ * Proin dapibus sapien vel ante. Aliquam erat volutpat. Pellentesque sagittis ligula eget metus.
+ * Vestibulum commodo. Ut rhoncus gravida arcu.
+ */
+
+package com.askfood.ers.injection.module;
+
+import android.app.Application;
+import android.content.Context;
+
+import com.askfood.ers.injection.scope.ApplicationContext;
+
+import dagger.Module;
+import dagger.Provides;
+
+/**
+ * Created by Anthony on 2016/6/13.
+ * Class Note:
+ */
+@Module
+public class ApplicationModule {
+    protected final Application mApplication;
+
+    public ApplicationModule(Application application) {
+        mApplication = application;
+    }
+
+    @Provides
+    Application provideApplication() {
+        return mApplication;
+    }
+
+    @Provides
+    @ApplicationContext
+    Context provideContext() {
+        return mApplication;
+    }
+
+
+}

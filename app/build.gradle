@@ -1,0 +1,115 @@
+apply plugin: 'com.android.application'
+apply from: '../dependencies.gradle'
+apply from: '../signing_config.gradle'
+apply plugin: 'org.greenrobot.greendao' // apply plugin
+android {
+    compileSdkVersion versions.compileSdk
+    buildToolsVersion versions.buildTools
+    defaultConfig {
+        applicationId "com.askfood.ers"
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.compileSdk
+        versionCode 2
+        versionName "ERS V0.2 dev"
+        vectorDrawables.useSupportLibrary = true
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        ndk {
+            // 设置支持的SO库架构
+            abiFilters 'armeabi', 'x86', 'armeabi-v7a', 'x86_64', 'arm64-v8a'
+        }
+    }
+    lintOptions {
+        abortOnError false
+    }
+    buildTypes {
+        release {
+            // 显示Log
+            //     buildConfigField "boolean", "LOG_DEBUG", "true"
+            //混淆
+            minifyEnabled false
+            signingConfig signingConfigs.release
+            //Zipalign优化
+            zipAlignEnabled true
+            // 移除无用的resource文件
+            shrinkResources false
+            //前一部分代表系统默认的android程序的混淆文件，该文件已经包含了基本的混淆声明
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+//    debug {
+//      minifyEnabled false
+//      proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//      signingConfig signingConfigs.debug
+//      zipAlignEnabled true
+//      // versionNameSuffix "-debug"
+//    }
+    }
+
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/dependencies.txt'
+        exclude 'META-INF/LGPL2.1'
+    }
+
+
+}
+
+greendao {
+    schemaVersion 1
+    daoPackage 'com.askfood.ers.daocore.db.dao'
+    targetGenDir 'src/main/java'
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+
+    testCompile 'junit:junit:4.12'
+
+    //支持包
+   // compile 'com.tencent.bugly:crashreport:latest.release'
+    compile 'com.tencent.bugly:nativecrashreport:latest.release'
+
+    compile 'com.tencent.bugly:crashreport_upgrade:latest.release'//其中latest.release指代最新版本号，也可以指定明确的版本号，例如1.2.0
+
+    compile 'com.android.support:appcompat-v7:' + versions.supportLib
+    compile 'com.android.support:recyclerview-v7:' + versions.supportLib
+    compile 'com.android.support:design:' + versions.supportLib
+    compile 'com.android.support:cardview-v7:' + versions.supportLib
+
+    compile 'com.google.dagger:dagger:' + versions.daggerVersion
+    annotationProcessor 'com.google.dagger:dagger-compiler:' + versions.daggerVersion
+    compile 'com.jakewharton:butterknife:' + versions.butterKnife
+    annotationProcessor 'com.jakewharton:butterknife-compiler:' + versions.butterKnife
+    compile 'javax.annotation:jsr250-api:1.0'
+    compile 'com.tbruyelle.rxpermissions2:rxpermissions:0.9.4@aar'
+    compile 'io.reactivex.rxjava2:rxandroid:' + versions.rxAndroid
+    compile 'io.reactivex.rxjava2:rxjava:' + versions.rxjava2
+    compile 'com.afollestad.material-dialogs:commons:' + versions.materialDialogsVersion
+
+    compile 'com.github.CymChad:BaseRecyclerViewAdapterHelper:' + versions.adapterVersion
+    compile 'com.jakewharton.timber:timber:4.5.1'
+
+    compile 'com.squareup.okhttp3:okhttp:' + versions.okHttpVersion
+    compile 'com.squareup.okhttp3:logging-interceptor:' + versions.okHttpVersion
+
+
+    compile 'com.squareup.retrofit2:retrofit:' + versions.retrofitVersion
+    compile 'com.squareup.retrofit2:adapter-rxjava2:' + versions.retrofitVersion
+    compile 'com.alibaba:fastjson:' + versions.fastjsonVersion
+    compile 'org.greenrobot:greendao:' + versions.greendaoVersion
+
+
+    compile 'com.google.zxing:core:3.3.0'
+    compile 'cn.bingoogolapple:bga-qrcodecore:1.1.9@aar'
+    compile 'cn.bingoogolapple:bga-zxing:1.1.9@aar'
+    compile 'com.github.a-voyager:BluetoothHelper:f71d40a98b'
+
+}

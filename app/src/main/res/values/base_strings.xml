@@ -1,0 +1,77 @@
+<resources>
+
+    <string-array name="planets_array">
+        <item>Mer</item>
+        <item>Venus</item>
+        <item>Earth</item>
+        <item>Mars</item>
+    </string-array>
+
+    <string-array name="mulitimedia_camera_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+
+    <string-array name="mulitimedia_camera">
+      <item>系统相机</item>
+      <item>自定义相机1</item>
+      <item>自定义相机2</item>
+      <item>google-camera</item>
+     <item>涂图相机</item>
+
+</string-array>
+    <string-array name="mulitimedia_video">
+        <item>自定义视频1</item>
+        <item>自定义视频2</item>
+        <item>系统录像</item>
+    </string-array>
+    <string-array name="mulitimedia_video_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string-array name="mulitimedia_camera_audio">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+
+    </string-array>
+
+    <string-array name="mulitimedia_audit">
+        <item>自定义录音1</item>
+        <item>自定义录音2</item>
+
+        <item>系统录音</item>
+    </string-array>
+    <string name="cancel">取消</string>
+    <string name="confirm">确定</string>
+    <string name="empty_title">""</string>
+
+
+    <string name="open">开</string>
+    <string name="close">关</string>
+    <string name="splash_version">V %1$s</string>
+    <string name="splash_slogan">Go through the every bit of life</string>
+    <string name="splash_copyright">Copyright &#169; 2017 zlcdgroup All Rights Reserved. </string>
+    <string name="version_upgrade">版本更新</string>
+    <string name="feature_info">功能介绍</string>
+    <string name="feedback_suggest">帮助与反馈</string>
+    <string name="the_lasted_version">已是最新版本</string>
+    <string name="official_website">www.zlcdgroup.com</string>
+
+    <string name="hint_login_username">请输入用户名</string>
+    <string name="hint_login_password">输入密码</string>
+    <string name="login">登录</string>
+    <string name="login_forget_pwd">忘记密码</string>
+    <string name="please_input_limit_pwd">请输入数字或字母</string>
+
+    <string name="press_again_exit_app">再按一次退出程序</string>
+
+    <string name="version">V 1.0</string>
+    <string name="date">February del 2013</string>
+    <string name="app_contact_info">Email: paulofghabana@gmail.com</string>
+</resources>
