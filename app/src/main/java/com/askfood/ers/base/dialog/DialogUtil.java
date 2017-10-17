@@ -234,7 +234,27 @@ public class DialogUtil {
                  }).show();
      }
 
+    public   static   void   modifyFoodInfoDialog(Context  context,String   content,Integer num,final DialogCallBack<Integer>  dialogCallBack){
+        new MaterialDialog.Builder(context)
+                .title("修改商品")
+                .content(content)
+                .inputType(InputType.TYPE_NUMBER_FLAG_SIGNED)
+                .inputRange(1,12)
+                .input("输入当前商品数量",null == num?"":String.valueOf(num.intValue()), new MaterialDialog.InputCallback() {
+                    @Override
+                    public void onInput(MaterialDialog dialog, CharSequence input) {
+                        dialog.dismiss();
+                        if(null != dialogCallBack){
+                            try {
+                                dialogCallBack.call(Integer.parseInt(input.toString()));
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
 
+                        }
+                    }
+                }).show();
+    }
 
      public   static   void   modifySpareDialog(Context  context,final DialogCallBack<Integer>  dialogCallBack){
          new MaterialDialog.Builder(context)

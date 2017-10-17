@@ -26,7 +26,7 @@ public class BluetoothSeachAdapter  extends BaseQuickAdapter<BluetoothDevice,Blu
     @Inject
     public BluetoothSeachAdapter(@ActivityContext Context  context) {
         super(null);
-        mLayoutInflater = LayoutInflater.from(context);
+        mInflater = LayoutInflater.from(context);
     }
 
 

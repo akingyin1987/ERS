@@ -18,6 +18,7 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 
@@ -25,6 +26,8 @@ import com.askfood.ers.ERSApp;
 import com.askfood.ers.R;
 import com.askfood.ers.base.AbsBaseActivity;
 
+import com.askfood.ers.bluetooth.BluetoothHelp;
+import com.askfood.ers.bluetooth.PrintUtils;
 import com.askfood.ers.injection.component.ActivityComponent;
 import com.askfood.ers.injection.component.DaggerActivityComponent;
 import com.askfood.ers.injection.module.ActivityModule;
@@ -41,15 +44,18 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import top.wuhaojie.bthelper.BtHelperClient;
+import top.wuhaojie.bthelper.MessageItem;
 import top.wuhaojie.bthelper.OnSearchDeviceListener;
+import top.wuhaojie.bthelper.OnSendMessageListener;
 
 /**
  * 蓝牙搜索
  * Created by Administrator on 2017/10/15.
  */
 
-public class ScanBluetootActivity extends AbsBaseActivity<ScanBluetoothPresenterImpl> implements ScanBluetoothContract.View {
+public class ScanBluetootActivity extends AbsBaseActivity<ScanBluetoothPresenterImpl> implements ScanBluetoothContract.View,OnSendMessageListener {
 
 
     @BindView(R.id.toolbar)
@@ -67,6 +73,7 @@ public class ScanBluetootActivity extends AbsBaseActivity<ScanBluetoothPresenter
     public BluetoothSeachAdapter mResultAdapter;
 
     public BtHelperClient   btHelperClient;
+    public BluetoothHelp    bluetoothHelp;
     @Override
     protected void initEventAndData() {
 
@@ -74,6 +81,7 @@ public class ScanBluetootActivity extends AbsBaseActivity<ScanBluetoothPresenter
         tvCureentBluetooth.setText("当前蓝牙："+ PreferencesUtil.get("bluetooth_mac","未选择"));
         reBluetooth.setLayoutManager(new LinearLayoutManager(this));
         reBluetooth.setItemAnimator(new DefaultItemAnimator());
+        reBluetooth.setAdapter(mResultAdapter);
         btHelperClient = BtHelperClient.from(this);
         mResultAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
             @Override
@@ -86,30 +94,45 @@ public class ScanBluetootActivity extends AbsBaseActivity<ScanBluetoothPresenter
         swipe.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-              btHelperClient.searchDevices(new OnSearchDeviceListener() {
-                  @Override
-                  public void onStartDiscovery() {
-                      showTips("开始扫描");
-                  }
+                refreshBluebooth();
+            }
+        });
+        bluetoothHelp = new BluetoothHelp(this);
+    }
 
-                  @Override
-                  public void onNewDeviceFounded(BluetoothDevice bluetoothDevice) {
 
-                  }
+    public   void   refreshBluebooth(){
+        swipe.setRefreshing(true);
+        if(bluetoothHelp.CheckBluetooth()){
+            bluetoothHelp.requestOpenBluetoothDevice();
+        }
+        btHelperClient.searchDevices(new OnSearchDeviceListener() {
+            @Override
+            public void onStartDiscovery() {
+                showTips("开始扫描");
+            }
 
-                  @Override
-                  public void onSearchCompleted(List<BluetoothDevice> list, List<BluetoothDevice> list1) {
-                    List<BluetoothDevice>   bluetoothDevices = new LinkedList<>();
-                    bluetoothDevices.addAll(list);
-                    bluetoothDevices.addAll(list1);
-                      mResultAdapter.setNewData(bluetoothDevices);
-                  }
 
-                  @Override
-                  public void onError(Exception e) {
-                      showError("扫描出错了");
-                  }
-              });
+
+            @Override
+            public void onNewDeviceFound(BluetoothDevice device) {
+                System.out.println("----------"+device.getAddress());
+            }
+
+            @Override
+            public void onSearchCompleted(List<BluetoothDevice> list, List<BluetoothDevice> list1) {
+                System.out.println("onSearchCompleted-----"+list.size()+""+list1.size());
+                List<BluetoothDevice>   bluetoothDevices = new LinkedList<>();
+                bluetoothDevices.addAll(list);
+                bluetoothDevices.addAll(list1);
+                mResultAdapter.setNewData(bluetoothDevices);
+                swipe.setRefreshing(false);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                swipe.setRefreshing(false);
+                showError("扫描出错了");
             }
         });
     }
@@ -142,7 +165,51 @@ public class ScanBluetootActivity extends AbsBaseActivity<ScanBluetoothPresenter
 
 
 
+    @OnClick(R.id.fab)
+    public   void  fab(){
+        refreshBluebooth();
+    }
 
 
+    @OnClick(R.id.btn_printtest)
+    public   void  btn_printtest(){
+       String   addr = PreferencesUtil.get("bluetooth_mac","");
+        if(TextUtils.isEmpty(addr)){
+            showError("当前蓝牙设备未选中，无法测试");
+            return;
+        }
 
+
+        btHelperClient.sendMessage(addr,new MessageItem(PrintUtils.RESET),this);
+        btHelperClient.sendMessage(addr,new MessageItem(PrintUtils.LINE_SPACING_DEFAULT),this);
+        btHelperClient.sendMessage(addr,new MessageItem(PrintUtils.ALIGN_CENTER),this);
+        btHelperClient.sendMessage(addr,new MessageItem(PrintUtils.printText("重庆问天食品有限公司\\n\\n")),this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(null != btHelperClient){
+            btHelperClient.close();
+        }
+        if(null != bluetoothHelp){
+            bluetoothHelp.closeBluetoohHelp();
+        }
+    }
+
+
+    @Override
+    public void onError(Exception e) {
+        showError("打印失败");
+    }
+
+    @Override
+    public void onConnectionLost(Exception e) {
+        showError("与蓝牙设备连接丢失，请重新尝试");
+    }
+
+    @Override
+    public void onSuccess(int status, String response) {
+
+    }
 }

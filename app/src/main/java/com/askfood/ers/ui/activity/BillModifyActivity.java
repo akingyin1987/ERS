@@ -70,8 +70,16 @@ public class BillModifyActivity extends AbsBaseActivity<BillModifyPresenterImpl>
         adapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(BaseQuickAdapter adapter1, View view, int position) {
-                BillVo  billVo = adapter.getItem(position);
-                showTips("修改商品"+billVo.goodsName);
+                final BillVo  billVo = adapter.getItem(position);
+                DialogUtil.modifyFoodInfoDialog(BillModifyActivity.this, "商品：" + billVo.goodsName, billVo.number, new DialogCallBack<Integer>() {
+                    @Override
+                    public void call(Integer integer) {
+                        if(null != integer){
+                            billVo.number = integer.intValue();
+                            adapter.notifyDataSetChanged();
+                        }
+                    }
+                });
             }
         });
     }

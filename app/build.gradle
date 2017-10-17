@@ -9,8 +9,8 @@ android {
         applicationId "com.askfood.ers"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.compileSdk
-        versionCode 2
-        versionName "ERS V0.2 dev"
+        versionCode 4
+        versionName "ERS V0.0.4 dev"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         ndk {
@@ -110,6 +110,6 @@ dependencies {
     compile 'com.google.zxing:core:3.3.0'
     compile 'cn.bingoogolapple:bga-qrcodecore:1.1.9@aar'
     compile 'cn.bingoogolapple:bga-zxing:1.1.9@aar'
-    compile 'com.github.a-voyager:BluetoothHelper:f71d40a98b'
+
 
 }

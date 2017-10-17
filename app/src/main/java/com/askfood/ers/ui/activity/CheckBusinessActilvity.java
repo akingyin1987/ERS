@@ -12,7 +12,7 @@ import com.askfood.ers.R;
 import com.askfood.ers.base.AbsBaseActivity;
 import com.askfood.ers.base.dialog.DialogCallBack;
 import com.askfood.ers.base.dialog.DialogUtil;
-import com.askfood.ers.base.rx.RxPermissionsUtil;
+
 import com.askfood.ers.injection.component.ActivityComponent;
 import com.askfood.ers.injection.component.DaggerActivityComponent;
 import com.askfood.ers.injection.module.ActivityModule;
@@ -84,6 +84,7 @@ public class CheckBusinessActilvity extends AbsBaseActivity<CheckBusinessPresent
     }
 
 
+    boolean    printed;//是否打印
 
     @OnClick(R.id.btn_print)
     public void onBtnPrintClicked() {
@@ -99,6 +100,7 @@ public class CheckBusinessActilvity extends AbsBaseActivity<CheckBusinessPresent
                         }else{
                             showWarning("请允许蓝牙使用");
                         }
+                        printed = true;
                     }
                 });
     }
@@ -125,6 +127,18 @@ public class CheckBusinessActilvity extends AbsBaseActivity<CheckBusinessPresent
 
     @OnClick(R.id.btn_start_check)
     public void onBtnStartCheckClicked() {
+        if(printed){
+            finish();
+        }else{
+            DialogUtil.showConfigDialog(this, "当前未打印，是否退出当前界面", new DialogCallBack<Boolean>() {
+                @Override
+                public void call(Boolean aBoolean) {
+                    if(aBoolean){
+                        finish();
+                    }
+                }
+            });
+        }
 
     }
 }
