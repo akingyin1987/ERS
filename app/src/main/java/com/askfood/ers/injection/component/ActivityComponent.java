@@ -14,6 +14,7 @@ import com.askfood.ers.injection.scope.PerActivity;
 import com.askfood.ers.ui.activity.BillModifyActivity;
 import com.askfood.ers.ui.activity.CheckBusinessActilvity;
 import com.askfood.ers.ui.activity.GrabBillActivity;
+import com.askfood.ers.ui.activity.GrabListActivity;
 import com.askfood.ers.ui.activity.HomeActivity;
 import com.askfood.ers.ui.activity.LoginActivity;
 import com.askfood.ers.ui.activity.MainBusinessActivity;
@@ -58,6 +59,8 @@ public interface ActivityComponent {
     void  inject(CheckBusinessActilvity  actilvity);
 
     void  inject(BillModifyActivity  activity);
+
+    void  inject(GrabListActivity  activity);
 
 
 }

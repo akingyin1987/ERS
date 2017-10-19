@@ -2,16 +2,20 @@ package com.askfood.ers.ui.activity;
 
 
 import android.Manifest;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
+import android.provider.Settings;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
 import com.askfood.ers.ERSApp;
 import com.askfood.ers.R;
 import com.askfood.ers.base.AbsBaseActivity;
-import com.askfood.ers.base.rx.RxPermissionsUtil;
+
 import com.askfood.ers.injection.component.ActivityComponent;
 import com.askfood.ers.injection.component.DaggerActivityComponent;
 import com.askfood.ers.injection.module.ActivityModule;
@@ -59,10 +63,28 @@ public class WorkBoxCodeActivity extends AbsBaseActivity<WorkBoxCodePresenterImp
     TextView tvCommodityBarcode;
     @BindView(R.id.fab)
     FloatingActionButton fab;
-
+    private ToneGenerator mToneGenerator;
+    private boolean mDTMFToneEnabled;// 按键操作音
+    private Object mToneGeneratorLock = new Object();// 监视器对象锁
+    private static final int TONE_RELATIVE_VOLUME = 80;
     @Override
     protected void initEventAndData() {
+        mDTMFToneEnabled = Settings.System.getInt(this.getContentResolver(),
+                Settings.System.DTMF_TONE_WHEN_DIALING, 1) == 1;
+        synchronized (mToneGeneratorLock) {
+            if (mToneGenerator == null) {
+                try {
+                    mToneGenerator = new ToneGenerator(
+                            AudioManager.STREAM_DTMF, TONE_RELATIVE_VOLUME);
+                } catch (RuntimeException e) {
+                    Log.d("jiebao",
+                            "Exception caught while creating local tone generator: "
+                                    + e);
+                    mToneGenerator = null;
+                }
 
+            }
+        }
     }
 
     @Override

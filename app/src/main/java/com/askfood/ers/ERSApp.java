@@ -17,8 +17,7 @@ import com.askfood.ers.utils.KissTools;
 import com.askfood.ers.utils.PreferencesUtil;
 import com.askfood.ers.utils.Utils;
 import com.tbruyelle.rxpermissions2.RxPermissions;
-import com.tencent.bugly.Bugly;
-import com.tencent.bugly.crashreport.CrashReport;
+
 
 import io.reactivex.functions.Consumer;
 import timber.log.Timber;
@@ -45,12 +44,13 @@ public class ERSApp extends Application {
 
         DbCore.enableQueryBuilderLog();
         DbCore.init(getApplicationContext());
-        CommonConstants.API_HOST="";
+
 
        // CrashReport.initCrashReport(getApplicationContext());
-        Bugly.init(getApplicationContext(), "cfa43dc3ae", false);
+      //  Bugly.init(getApplicationContext(), "cfa43dc3ae", false);
         getApplicationComponent().inject(this);
         PreferencesUtil.setDefaultName("ers_setting_pre");
+        CommonConstants.SESSIONKEY = PreferencesUtil.get("sessionkey","");
     }
 
 

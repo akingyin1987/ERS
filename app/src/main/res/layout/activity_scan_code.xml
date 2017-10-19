@@ -68,15 +68,28 @@
 
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:id="@+id/tv_boxcode"
             android:textColor="@color/red_dark"
-            android:text="5件"
-            android:padding="3dp"
-            android:layout_margin="8dp"
+            android:text="5"
+            android:paddingBottom="3dp"
+            android:paddingTop="3dp"
             android:textSize="30sp"
 
-            android:gravity="center"
+            android:gravity="right"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:textColor="@color/red_dark"
+            android:text="件"
+            android:paddingBottom="3dp"
+            android:paddingTop="3dp"
+            android:textSize="30sp"
+
+            android:gravity="left"
             android:layout_height="wrap_content" />
     </LinearLayout>
 

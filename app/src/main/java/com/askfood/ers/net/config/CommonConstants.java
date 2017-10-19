@@ -32,4 +32,6 @@ public class CommonConstants {
     public static String  imei ="";
 
     public static String  refreshToken = "";//刷新 使用token
+
+    public   static   String   SESSIONKEY="";
 }

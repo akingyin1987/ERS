@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ERS</string>
+    <string name="scan_init_failure_info">Scanner init failured , Please Retry!</string>
 </resources>

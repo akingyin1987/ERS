@@ -14,7 +14,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.tencent.bugly.crashreport.CrashReport;
+
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -181,7 +181,7 @@ public class BtHelperClient {
             return  mSocket;
         }
         BluetoothDevice remoteDevice = mBluetoothAdapter.getRemoteDevice(mac);
-        CrashReport.postCatchedException(new Throwable("null ==remoteDevice"+(null == remoteDevice)));
+
         mBluetoothAdapter.cancelDiscovery();
         mCurrStatus = STATUS.CONNECTING;
         try {
@@ -193,7 +193,7 @@ public class BtHelperClient {
             mCurrStatus = STATUS.CONNECTED;
             return  mSocket;
         } catch (Exception e) {
-            CrashReport.postCatchedException(e);
+
             try {
                 mSocket =  (BluetoothSocket) remoteDevice.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(remoteDevice,1);
                 mSocket.connect();
@@ -202,7 +202,7 @@ public class BtHelperClient {
                 mCurrStatus = STATUS.CONNECTED;
                 return  mSocket;
             } catch (Exception e1) {
-                CrashReport.postCatchedException(e1);
+
                 e1.printStackTrace();
 
                 try {
@@ -625,7 +625,7 @@ public class BtHelperClient {
         public void run() {
             // always return a remote device
             BluetoothDevice remoteDevice = mBluetoothAdapter.getRemoteDevice(mac);
-            CrashReport.postCatchedException(new Throwable("null ==remoteDevice"+(null == remoteDevice)));
+
             mBluetoothAdapter.cancelDiscovery();
             mCurrStatus = STATUS.CONNECTING;
             try {
@@ -642,7 +642,7 @@ public class BtHelperClient {
 //                mOutputStream = mSocket.getOutputStream();
 //                mCurrStatus = STATUS.CONNECTED;
             } catch (Exception e) {
-                CrashReport.postCatchedException(e);
+
                 try {
                     mSocket =  (BluetoothSocket) remoteDevice.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(remoteDevice,1);
                     mSocket.connect();
@@ -650,7 +650,7 @@ public class BtHelperClient {
                     mOutputStream = mSocket.getOutputStream();
                     mCurrStatus = STATUS.CONNECTED;
                 } catch (Exception e1) {
-                    CrashReport.postCatchedException(e1);
+
                     e1.printStackTrace();
                     if (listener != null)
                         listener.onError(e);

@@ -36,6 +36,8 @@ public interface LoginContract {
 
     void   login();
 
+    void   goToBusiness();
+
   }
 
   interface Presenter extends BasePresenter<View> {

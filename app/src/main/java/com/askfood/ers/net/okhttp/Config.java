@@ -19,7 +19,7 @@ public class Config {
 
     public  static final     long  RESPONSE_CACHE_SIZE = 10*1024;
 
-    public  static  final   int  HTTP_CONNECT_TIMEOUT=30;
+    public  static  final   int  HTTP_CONNECT_TIMEOUT=10;
 
     public  static  final  int  HTTP_READ_TIMEOUT=30;
 

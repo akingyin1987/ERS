@@ -6,6 +6,7 @@ import android.text.TextWatcher;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -14,11 +15,19 @@ import android.widget.TextView;
 
 import com.askfood.ers.ERSApp;
 import com.askfood.ers.R;
+import com.askfood.ers.api.EncasementApi;
+import com.askfood.ers.api.model.UserLoginModel;
 import com.askfood.ers.base.AbsBaseActivity;
 import com.askfood.ers.base.call.AppCallBack;
+import com.askfood.ers.base.dialog.DialogUtil;
+import com.askfood.ers.base.rx.RxUtil;
 import com.askfood.ers.injection.component.ActivityComponent;
 import com.askfood.ers.injection.component.DaggerActivityComponent;
 import com.askfood.ers.injection.module.ActivityModule;
+import com.askfood.ers.net.RetrofitUtils;
+import com.askfood.ers.net.config.CommonConstants;
+import com.askfood.ers.net.mode.ApiResult;
+import com.askfood.ers.net.okhttp.OkHttpUtils;
 import com.askfood.ers.presenter.LoginContract;
 import com.askfood.ers.presenter.impl.LoginPresenterImpl;
 import com.askfood.ers.utils.AppUtils;
@@ -29,6 +38,9 @@ import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by Administrator on 2017/10/15.
@@ -106,17 +118,58 @@ public class LoginActivity extends AbsBaseActivity<LoginPresenterImpl> implement
             etPassword.setSelection(pwd.length());
     }
 
+
+    private Disposable mDisposable;
+
     @Override
     public void login() {
-
+        String  account = etMobile.getText().toString().trim();
+        if(TextUtils.isEmpty(account)){
+            showError("用户名不可为空");
+            return;
+        }
+        String  pass = etPassword.getText().toString().trim();
+        if(TextUtils.isEmpty(pass)){
+            showError("密码不可为空");
+            return;
+        }
+        hideSoftKeyboard(etPassword);
+        EncasementApi  encasementApi = RetrofitUtils.createApi(EncasementApi.class, OkHttpUtils.getInstance(), CommonConstants.API_HOST);
+       mDisposable =  encasementApi.login(account,pass).compose(RxUtil.<ApiResult<UserLoginModel>>IO_Main())
+                .doOnSubscribe(doOnConsmer).subscribe(new Consumer<ApiResult<UserLoginModel>>() {
+                   @Override
+                   public void accept(ApiResult<UserLoginModel> userLoginModelApiResult) throws Exception {
+                      goToBusiness();
+                   }
+               }, new Consumer<Throwable>() {
+                   @Override
+                   public void accept(Throwable throwable) throws Exception {
+                       goToBusiness();
+                   }
+               });
     }
-
+    /**
+     * 关闭软键盘
+     *
+     * @param view
+     */
+    public void hideSoftKeyboard(View view) {
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+    @Override
+    public void onCancelDialog() {
+        super.onCancelDialog();
+        if(null != mDisposable && !mDisposable.isDisposed()){
+            mDisposable.dispose();
+        }
+    }
 
     int    type;
 
     @Override
     protected void initEventAndData() {
-        tvVersion.setText("V"+ AppUtils.getAppVersionName());
+        tvImei.setText("V"+ AppUtils.getAppVersionName());
         type = getIntent().getIntExtra("type",0);//0=装箱 1=复检
         etMobile.setText(PreferencesUtil.get("userAcount",""));
 
@@ -172,15 +225,7 @@ public class LoginActivity extends AbsBaseActivity<LoginPresenterImpl> implement
             }
         });
 
-        ERSApp.get().applyPrivacyAuth(this, new AppCallBack<Boolean>() {
-            @Override public void call(Boolean aBoolean) {
-                if(aBoolean){
 
-                }else{
-                    showWarning("请允许应用必要的权限");
-                }
-            }
-        });
     }
 
     @Override
@@ -226,6 +271,27 @@ public class LoginActivity extends AbsBaseActivity<LoginPresenterImpl> implement
 
     @OnClick(R.id.btn_login)
     public void onBtnLoginClicked() {
+        ERSApp.get().applyPrivacyAuth(this, new AppCallBack<Boolean>() {
+            @Override public void call(Boolean aBoolean) {
+                if(aBoolean){
+                    login();
+                }else{
+                    showWarning("请允许应用必要的权限");
+                }
+            }
+        });
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        hideLoadDialog();
+        DialogUtil.hideLoadDialog(pd);
+    }
+
+    @Override
+    public void goToBusiness() {
         PreferencesUtil.put("userAcount",etMobile.getText().toString().trim());
         if(type == 0){
             //进入装箱

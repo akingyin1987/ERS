@@ -15,6 +15,7 @@ import com.askfood.ers.net.retrofitConverter.FastJsonConverterFactory;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
 
 /**
@@ -31,7 +32,14 @@ public class RetrofitUtils {
     public static final String BAIDU_IMAGES_URLS = "http://image.baidu.com";
 
 
-
+    /**
+     * 转JSON
+     * @param clazz
+     * @param okHttpClient
+     * @param baseUrl
+     * @param <T>
+     * @return
+     */
     public static <T> T createApi(Class<T> clazz, OkHttpClient okHttpClient, String baseUrl) {
         synchronized (RetrofitUtils.class) {
                 Retrofit.Builder builder = new Retrofit.Builder();
@@ -41,6 +49,24 @@ public class RetrofitUtils {
                 builder.client(okHttpClient);
                 return builder.build().create(clazz);
         }
+    }
+
+    /**
+     * 转XML
+     * @param baseUrl
+     * @param okHttpClient
+     * @param service
+     * @param <T>
+     * @return
+     */
+    public static  <T> T createByXML(String baseUrl,OkHttpClient okHttpClient, Class<T> service){
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .client(okHttpClient)
+                .addConverterFactory(SimpleXmlConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .build();
+        return retrofit.create(service);
     }
 
 }

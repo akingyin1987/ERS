@@ -9,14 +9,14 @@ android {
         applicationId "com.askfood.ers"
         minSdkVersion versions.minSdk
         targetSdkVersion versions.compileSdk
-        versionCode 5
-        versionName "ERS V0.0.5 dev"
+        versionCode 6
+        versionName "ERS V0.0.6 dev"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        ndk {
-            // 设置支持的SO库架构
-            abiFilters 'armeabi', 'x86', 'armeabi-v7a', 'x86_64', 'arm64-v8a'
-        }
+//        ndk {
+//            // 设置支持的SO库架构
+//            abiFilters 'armeabi'
+//        }
     }
     lintOptions {
         abortOnError false
@@ -29,7 +29,7 @@ android {
             minifyEnabled false
             signingConfig signingConfigs.release
             //Zipalign优化
-            zipAlignEnabled true
+            zipAlignEnabled false
             // 移除无用的resource文件
             shrinkResources false
             //前一部分代表系统默认的android程序的混淆文件，该文件已经包含了基本的混淆声明
@@ -42,6 +42,28 @@ android {
 //      zipAlignEnabled true
 //      // versionNameSuffix "-debug"
 //    }
+
+        sourceSets {
+            main {
+                manifest.srcFile 'src/main/AndroidManifest.xml'
+                java.srcDirs = ['src/main/java']
+                res.srcDirs = ['src/main/res']
+                jniLibs.srcDirs = ['libs']
+
+            }
+
+            // Move the tests to tests/java, tests/res, etc...
+            instrumentTest.setRoot('tests')
+
+            // Move the build types to build-types/<type>
+            // For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
+            // This moves them out of them default location under src/<type>/... which would
+            // conflict with src/ being used by the main source set.
+            // Adding new build types or product flavors should be accompanied
+            // by a similar customization.
+            debug.setRoot('build-types/debug')
+            release.setRoot('build-types/release')
+        }
     }
 
 
@@ -68,22 +90,18 @@ greendao {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-
-
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-
     //支持包
-   // compile 'com.tencent.bugly:crashreport:latest.release'
-    compile 'com.tencent.bugly:nativecrashreport:latest.release'
 
-    compile 'com.tencent.bugly:crashreport_upgrade:latest.release'//其中latest.release指代最新版本号，也可以指定明确的版本号，例如1.2.0
-
+    // compile 'com.tencent.bugly:crashreport:latest.release'
+  //  compile 'com.tencent.bugly:nativecrashreport:latest.release'
+  //  compile 'com.tencent.bugly:crashreport_upgrade:latest.release'
+    //其中latest.release指代最新版本号，也可以指定明确的版本号，例如1.2.0
     compile 'com.android.support:appcompat-v7:' + versions.supportLib
     compile 'com.android.support:recyclerview-v7:' + versions.supportLib
     compile 'com.android.support:design:' + versions.supportLib
     compile 'com.android.support:cardview-v7:' + versions.supportLib
-
     compile 'com.google.dagger:dagger:' + versions.daggerVersion
     annotationProcessor 'com.google.dagger:dagger-compiler:' + versions.daggerVersion
     compile 'com.jakewharton:butterknife:' + versions.butterKnife
@@ -93,23 +111,24 @@ dependencies {
     compile 'io.reactivex.rxjava2:rxandroid:' + versions.rxAndroid
     compile 'io.reactivex.rxjava2:rxjava:' + versions.rxjava2
     compile 'com.afollestad.material-dialogs:commons:' + versions.materialDialogsVersion
-
     compile 'com.github.CymChad:BaseRecyclerViewAdapterHelper:' + versions.adapterVersion
     compile 'com.jakewharton.timber:timber:4.5.1'
-
     compile 'com.squareup.okhttp3:okhttp:' + versions.okHttpVersion
     compile 'com.squareup.okhttp3:logging-interceptor:' + versions.okHttpVersion
-
-
     compile 'com.squareup.retrofit2:retrofit:' + versions.retrofitVersion
     compile 'com.squareup.retrofit2:adapter-rxjava2:' + versions.retrofitVersion
+    compile('com.squareup.retrofit2:converter-simplexml:' + versions.retrofitVersion)
+    {
+        exclude group: 'xpp3', module: 'xpp3'
+        exclude group: 'stax', module: 'stax-api'
+        exclude group: 'stax', module: 'stax'
+    }
     compile 'com.alibaba:fastjson:' + versions.fastjsonVersion
     compile 'org.greenrobot:greendao:' + versions.greendaoVersion
-
-
     compile 'com.google.zxing:core:3.3.0'
     compile 'cn.bingoogolapple:bga-qrcodecore:1.1.9@aar'
     compile 'cn.bingoogolapple:bga-zxing:1.1.9@aar'
-
-
+    compile files('libs/ht380k4g-jar.jar')
+    compile files('libs/classes.jar')
+    compile files('libs/ModuleAPI_Android_2.2.2.0.jar')
 }

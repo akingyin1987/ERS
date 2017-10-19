@@ -20,7 +20,7 @@ import com.askfood.ers.injection.component.DaggerActivityComponent;
 import com.askfood.ers.injection.module.ActivityModule;
 import com.askfood.ers.presenter.HomeContract;
 import com.askfood.ers.presenter.impl.HomePresenterImpl;
-import com.tencent.bugly.beta.Beta;
+
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -56,7 +56,7 @@ public class HomeActivity extends AbsBaseActivity<HomePresenterImpl> implements 
 
     @Override
     protected void initEventAndData() {
-        Beta.checkUpgrade();
+
     }
 
     @Override
