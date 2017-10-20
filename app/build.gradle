@@ -128,7 +128,6 @@ dependencies {
     compile 'com.google.zxing:core:3.3.0'
     compile 'cn.bingoogolapple:bga-qrcodecore:1.1.9@aar'
     compile 'cn.bingoogolapple:bga-zxing:1.1.9@aar'
-    compile files('libs/ht380k4g-jar.jar')
-    compile files('libs/classes.jar')
-    compile files('libs/ModuleAPI_Android_2.2.2.0.jar')
+
+    compile files('libs/Jb380_Common_V1.3.jar')
 }

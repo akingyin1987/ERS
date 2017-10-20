@@ -9,10 +9,12 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.jb.Preference;
 import android.jb.barcode.BarcodeManager;
+import android.jb.utils.Tools;
 import android.jb.utils.WakeLockUtil;
 import android.os.IBinder;
 import android.support.design.widget.AppBarLayout;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -28,11 +30,13 @@ import com.askfood.ers.injection.component.DaggerActivityComponent;
 import com.askfood.ers.injection.module.ActivityModule;
 import com.askfood.ers.presenter.ScanCodeContract;
 import com.askfood.ers.presenter.impl.ScanCodePresenterImpl;
+import com.barcode.BeepManager;
 import com.barcode.ScanDeviceType;
 import com.barcode.ScanListener;
 import com.barcode.ScanService;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
@@ -45,7 +49,7 @@ import io.reactivex.functions.Consumer;
  * Created by Administrator on 2017/10/15.
  */
 
-public class ScanCodeActivity extends AbsBaseActivity<ScanCodePresenterImpl> implements ScanCodeContract.View ,ScanListener {
+public class ScanCodeActivity extends AbsBaseActivity<ScanCodePresenterImpl> implements ScanCodeContract.View ,ScanListener,BarcodeManager.Callback {
 
 
     @BindView(R.id.toolbar)
@@ -69,14 +73,16 @@ public class ScanCodeActivity extends AbsBaseActivity<ScanCodePresenterImpl> imp
     private BarcodeManager scanManager;
     private int scan_time_limit = 300;
     WakeLockUtil mWakeLockUtil = null;
+    BeepManager  beepManager =null;
     @Override
     protected void initEventAndData() {
         File  file = new File("/dev/moto_sdl");
         System.out.println(file.exists());
         Preference.setScanDeviceType(this, ScanDeviceType.OneD);
-        service = new Intent(this, ScanService.class);
-        startService(service);
-        bindService(service, serviceConnection, BIND_AUTO_CREATE);
+//        service = new Intent(this, ScanService.class);
+//        startService(service);
+//        bindService(service, serviceConnection, BIND_AUTO_CREATE);
+        beepManager = new BeepManager(this, true, false);
         mWakeLockUtil = new WakeLockUtil(this);
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("com.jb.action.F4key");
@@ -89,7 +95,17 @@ public class ScanCodeActivity extends AbsBaseActivity<ScanCodePresenterImpl> imp
             // Bundle bundle = intent.getExtras();
             if (intent.hasExtra("F4key")) {
                 if (intent.getStringExtra("F4key").equals("down")) {
+                    if (null != scanManager) {
+                        nowTime = System.currentTimeMillis();
 
+                        if (nowTime - lastTime > 200) {
+                            scanManager.Barcode_Stop();
+                            lastTime = nowTime;
+                            if (null != scanManager) {
+                                scanManager.Barcode_Start();
+                            }
+                        }
+                    }
 
                 } else if (intent.getStringExtra("F4key").equals("up")) {
 
@@ -157,33 +173,25 @@ public class ScanCodeActivity extends AbsBaseActivity<ScanCodePresenterImpl> imp
     long  nowTime=0L,lastTime=0L;
     @OnClick(R.id.btn_scan)
     public  void  btn_scan(){
+        btn_scan.setEnabled(false);
+        nowTime = System.currentTimeMillis();
 
-        if (scanService != null) {
+        if (nowTime - lastTime > 200) {
 
-            btn_scan.setEnabled(false);
-            nowTime = System.currentTimeMillis();
-
-            if (nowTime - lastTime > 200) {
-
-                scanManager.Barcode_Stop();
-                scanManager.Barcode_Start();
-                mWakeLockUtil.lock();// 保持屏幕唤醒
-                lastTime = nowTime;
-
-            }
-            Observable.timer(3, TimeUnit.SECONDS).compose(RxUtil.<Long>IO_Main())
-                    .subscribe(new Consumer<Long>() {
-                        @Override
-                        public void accept(Long aLong) throws Exception {
-                           btn_scan.setEnabled(true);
-                        }
-                    });
-
-        } else {
-
-           showError("扫描器出错");
+            scanManager.Barcode_Stop();
+            scanManager.Barcode_Start();
+            mWakeLockUtil.lock();// 保持屏幕唤醒
+            lastTime = nowTime;
 
         }
+        Observable.timer(3, TimeUnit.SECONDS).compose(RxUtil.<Long>IO_Main())
+                .subscribe(new Consumer<Long>() {
+                    @Override
+                    public void accept(Long aLong) throws Exception {
+                        btn_scan.setEnabled(true);
+                    }
+                });
+
 
 
     }
@@ -211,19 +219,24 @@ public class ScanCodeActivity extends AbsBaseActivity<ScanCodePresenterImpl> imp
     @Override
     protected void onPause() {
         super.onPause();
-        if (scanService != null){
-            scanService.setActivityUp(false);
+        sendBroadcast(new Intent("ReLoadCom"));
+        if (null != scanManager) {
+           scanManager.Barcode_Close();
+            scanManager.Barcode_Stop();
         }
-
-        ScanService.isScanActivityUp = true;
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (scanService != null)
-            scanService.setActivityUp(true);
-        ScanService.isScanActivityUp = false;
+        sendBroadcast(new Intent("ReleaseCom"));
+        if (scanManager == null) {
+            scanManager = BarcodeManager.getInstance();
+        }
+        scanManager.Barcode_Open(this, this);
+//        if (scanService != null)
+//            scanService.setActivityUp(true);
+//        ScanService.isScanActivityUp = false;
 
     }
 
@@ -247,17 +260,37 @@ public class ScanCodeActivity extends AbsBaseActivity<ScanCodePresenterImpl> imp
             }
         }
 
-        if (bind) {
-            unbindService(serviceConnection);
-            if (!Preference.getScanSelfopenSupport(this, true)) {
-                this.stopService(service);
-            }
-        }
-
         mWakeLockUtil.unLock();//
 
         if(null != f4Receiver){
             this.unregisterReceiver(f4Receiver);
+        }
+
+    }
+
+    @Override
+    public void Barcode_Read(byte[] buffer, String codeId, int errorCode) {
+        scanManager.Barcode_Stop();
+        if(errorCode != 0){
+            showError("扫描出错");
+            return;
+        }
+        beepManager.play();
+        String codeType = Tools.returnType(buffer);
+        String val = null;
+        if (codeType.equals("default")) {
+            val = new String(buffer);
+        } else {
+            try {
+                val = new String(buffer, codeType);
+
+            } catch (UnsupportedEncodingException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        if(!TextUtils.isEmpty(val)){
+            showSucces("扫描成功:"+val);
         }
 
     }
